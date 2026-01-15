@@ -9,26 +9,75 @@
     .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin: 10px 0; }
     input[type="text"] { width: min(900px, 100%); padding: 10px; font-size: 14px; }
     button { padding: 10px 14px; font-size: 14px; cursor: pointer; }
-    .card { border: 1px solid #ddd; border-radius: 10px; padding: 12px; margin-top: 12px; }
+    .card { border: 1px solid #ddd; border-radius: 12px; padding: 14px; margin-top: 12px; background: #fff; }
     .small { font-size: 12px; color: #444; }
     .status { font-weight: 600; }
     .good { color: #0a7a0a; }
     .bad { color: #b00020; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre-wrap; }
-    #webcam { width: 320px; height: 240px; background: #000; border-radius: 10px; }
+    #webcam { width: 320px; height: 240px; background: #000; border-radius: 12px; }
     label { font-weight: 600; }
     select { padding: 10px; font-size: 14px; }
-    a { color: inherit; }
     .steps li { margin: 6px 0; }
-    .pill { display:inline-block; padding:2px 8px; border:1px solid #ddd; border-radius:999px; font-size:12px; }
+    .pill { display:inline-block; padding:2px 8px; border:1px solid #ddd; border-radius:999px; font-size:12px; background:#fafafa; }
     .warning {
       background:#fff4f4;
       border:2px solid #b00020;
-      border-radius:10px;
+      border-radius:12px;
       padding:12px;
-      margin:12px 0;
+      margin-top:12px;
     }
     .warning strong { color:#b00020; }
+
+    /* Remove underlines from links */
+    a, a:visited, a:hover, a:active { color: inherit; text-decoration: none; }
+    .link-pill {
+      display:inline-block;
+      padding:8px 10px;
+      border:1px solid #ddd;
+      border-radius:999px;
+      background:#f7f7f7;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+    }
+    .link-pill:hover { background:#efefef; }
+
+    /* Top banner "graphic" (no external images needed) */
+    .hero {
+      border-radius: 16px;
+      padding: 18px 16px;
+      border: 1px solid #e6e6e6;
+      background: linear-gradient(135deg, #f4f8ff 0%, #ffffff 45%, #f7fff9 100%);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 14px;
+    }
+    .hero-left { display:flex; align-items:center; gap: 12px; }
+    .mark {
+      width: 44px; height: 44px;
+      border-radius: 14px;
+      border: 1px solid #dcdcdc;
+      background: #ffffff;
+      display:flex; align-items:center; justify-content:center;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+      flex: 0 0 auto;
+    }
+    .title-wrap h1 { margin: 0; font-size: 22px; }
+    .title-wrap p { margin: 4px 0 0 0; color:#444; font-size: 13px; }
+    .hero-right { display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+    .tag {
+      font-size: 12px;
+      border: 1px solid #e1e1e1;
+      background: #ffffff;
+      border-radius: 999px;
+      padding: 6px 10px;
+      color: #333;
+    }
+    @media (max-width: 720px) {
+      .hero { flex-direction: column; align-items: flex-start; }
+      .hero-right { justify-content:flex-start; }
+    }
   </style>
 
   <!-- TFJS + Teachable Machine Image library -->
@@ -37,41 +86,46 @@
 </head>
 
 <body>
-  <h1>Teachable Machine → micro:bit USB Serial Bridge</h1>
 
-  <!-- 🔴 IMPORTANT SERIAL WARNING -->
-  <div class="warning">
-    <strong>IMPORTANT:</strong>  
-    Before clicking <strong>Connect micro:bit (USB)</strong>, make sure:
-    <ul>
-      <li>The <strong>MakeCode serial monitor is CLOSED</strong></li>
-      <li>No other program or browser tab is using the micro:bit</li>
-    </ul>
-    If the micro:bit was just reprogrammed, click <strong>Stop</strong> then <strong>Start</strong> again.
+  <!-- Header "graphic" -->
+  <div class="hero">
+    <div class="hero-left">
+      <div class="mark" aria-hidden="true">
+        <!-- Simple inline SVG icon -->
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+          <path d="M7 7h10v10H7V7Z" stroke="#111" stroke-width="1.5" />
+          <path d="M9 5V3m6 2V3M9 21v-2m6 2v-2M5 9H3m2 6H3m18-6h-2m2 6h-2"
+                stroke="#111" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M10 12h4" stroke="#111" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M12 10v4" stroke="#111" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="title-wrap">
+        <h1>Teachable Machine → micro:bit Bridge</h1>
+        <p>Paste your model link, connect your micro:bit, then start sending predictions.</p>
+      </div>
+    </div>
+    <div class="hero-right">
+      <span class="tag">Chrome / Edge</span>
+      <span class="tag">USB Serial</span>
+      <span class="tag">Image Model</span>
+    </div>
   </div>
 
   <div class="card">
     <h2>Student steps</h2>
     <ol class="steps">
       <li>
-        Open the micro:bit starter code:  
-        <span class="mono">
-          <a href="https://makecode.microbit.org/S83995-91415-95726-23216" target="_blank" rel="noopener">
-            https://makecode.microbit.org/S83995-91415-95726-23216
-          </a>
-        </span>
+        Open the micro:bit starter code:
+        <a class="link-pill" href="https://makecode.microbit.org/S83995-91415-95726-23216" target="_blank" rel="noopener">
+          https://makecode.microbit.org/S83995-91415-95726-23216
+        </a>
       </li>
       <li>Connect your micro:bit using a USB data cable.</li>
       <li>Paste your Teachable Machine model link below and click <span class="pill">Check URL</span>.</li>
-      <li>
-        Make sure the <strong>MakeCode serial monitor is closed</strong>, then click
-        <span class="pill">Connect micro:bit (USB)</span>.
-      </li>
+      <li>Click <span class="pill">Connect micro:bit (USB)</span> and choose the micro:bit port.</li>
       <li>Click <span class="pill">Start</span> to send predictions to the micro:bit.</li>
-      <li>
-        If you update or re-download code to the micro:bit, always click
-        <span class="pill">Stop</span> then <span class="pill">Start</span>.
-      </li>
+      <li>If you update or re-download code to the micro:bit, click <span class="pill">Stop</span> then <span class="pill">Start</span>.</li>
     </ol>
   </div>
 
@@ -90,9 +144,6 @@
 
     <div class="row">
       <button id="btnConnect">Connect micro:bit (USB)</button>
-      <span class="small">
-        ⬅ Make sure the <strong>MakeCode serial monitor is CLOSED</strong>
-      </span>
       <button id="btnStart" disabled>Start</button>
       <button id="btnStop" disabled>Stop</button>
     </div>
@@ -130,9 +181,251 @@
     </div>
   </div>
 
+  <!-- Warning moved to the bottom -->
+  <div class="warning">
+    <strong>IMPORTANT:</strong> Before clicking <strong>Connect micro:bit (USB)</strong>, make sure:
+    <ul>
+      <li>The <strong>MakeCode serial monitor is CLOSED</strong></li>
+      <li>No other program or browser tab is using the micro:bit</li>
+    </ul>
+    If the micro:bit was just reprogrammed, click <strong>Stop</strong> then <strong>Start</strong> again.
+  </div>
+
 <script>
-  /* JS LOGIC UNCHANGED FROM PREVIOUS VERSION */
-  /* (No functionality changes — UI text only) */
+  // ---------- UI helpers ----------
+  const $ = (id) => document.getElementById(id);
+  const logEl = $("log");
+  function log(msg) {
+    const now = new Date().toLocaleTimeString();
+    logEl.textContent = (logEl.textContent === "—" ? "" : logEl.textContent) + `[${now}] ${msg}\n`;
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+  function setStatus(text, ok) {
+    $("status").innerHTML = `Status: <span class="${ok ? "good" : "bad"}">${text}</span>`;
+  }
+
+  // ---------- Remember model URL ----------
+  const LS_KEY = "tm_microbit_bridge_model_url";
+  function loadRememberedUrl() {
+    const saved = localStorage.getItem(LS_KEY);
+    if (saved) $("modelUrl").value = saved;
+  }
+
+  // ---------- Web Serial ----------
+  let port = null;
+  let writer = null;
+
+  async function connectSerial() {
+    if (!("serial" in navigator)) {
+      alert("Web Serial is not supported in this browser. Use Chrome or Edge on a desktop/laptop.");
+      return;
+    }
+    port = await navigator.serial.requestPort();
+    await port.open({ baudRate: 115200 });
+    writer = port.writable.getWriter();
+    setStatus("micro:bit connected (USB serial)", true);
+    log("Connected to micro:bit.");
+  }
+
+  async function sendLine(line) {
+    if (!writer) return;
+    const data = new TextEncoder().encode(line + "\n");
+    await writer.write(data);
+  }
+
+  async function disconnectSerial() {
+    try {
+      if (writer) { writer.releaseLock(); writer = null; }
+      if (port) { await port.close(); port = null; }
+    } catch (e) { /* ignore */ }
+    setStatus("Not connected", false);
+    log("Disconnected.");
+  }
+
+  // ---------- Teachable Machine (Image) ----------
+  let model = null;
+  let webcam = null;
+  let loopHandle = null;
+
+  let lastSentLabel = "";
+  let lastSentTime = 0;
+
+  function normalizeBaseUrl(u) {
+    u = (u || "").trim();
+    if (!u) return "";
+    if (!u.endsWith("/")) u += "/";
+    return u;
+  }
+
+  async function checkModelUrl(baseUrl) {
+    const modelJson = baseUrl + "model.json";
+    const res = await fetch(modelJson, { method: "GET" });
+    return res.ok;
+  }
+
+  function toABC(bestIndex) {
+    return String.fromCharCode("A".charCodeAt(0) + bestIndex);
+  }
+
+  async function loadModel(baseUrl) {
+    const modelURL = baseUrl + "model.json";
+    const metadataURL = baseUrl + "metadata.json";
+    model = await tmImage.load(modelURL, metadataURL);
+    log("Model loaded.");
+
+    const flip = true;
+    webcam = new tmImage.Webcam(320, 240, flip);
+    await webcam.setup();
+    await webcam.play();
+    log("Webcam started.");
+
+    const canvas = $("webcam");
+    const ctx = canvas.getContext("2d");
+
+    async function frame() {
+      webcam.update();
+      ctx.drawImage(webcam.canvas, 0, 0, canvas.width, canvas.height);
+      await predictAndMaybeSend();
+      loopHandle = requestAnimationFrame(frame);
+    }
+    loopHandle = requestAnimationFrame(frame);
+  }
+
+  async function stopAll() {
+    if (loopHandle) cancelAnimationFrame(loopHandle);
+    loopHandle = null;
+
+    if (webcam) {
+      try { await webcam.stop(); } catch(e) {}
+      webcam = null;
+    }
+    model = null;
+    $("predOut").textContent = "—";
+    log("Stopped.");
+  }
+
+  async function predictAndMaybeSend() {
+    if (!model || !webcam) return;
+
+    const preds = await model.predict(webcam.canvas);
+
+    let best = preds[0];
+    let bestIndex = 0;
+    for (let i = 0; i < preds.length; i++) {
+      const p = preds[i];
+      if (p.probability > best.probability) {
+        best = p;
+        bestIndex = i;
+      }
+    }
+
+    const thr = parseFloat($("threshold").value);
+    const minMs = parseInt($("minInterval").value || "350", 10);
+    const now = Date.now();
+
+    $("predOut").textContent =
+      `Top: ${best.className}  (${best.probability.toFixed(3)})\n` +
+      preds.map(p => `${p.className}: ${p.probability.toFixed(3)}`).join("\n");
+
+    if (writer && best.probability >= thr) {
+      const sendMode = $("sendMode").value;
+      const outgoing = (sendMode === "abc") ? toABC(bestIndex) : best.className;
+
+      const changed = outgoing !== lastSentLabel;
+      const timed = (now - lastSentTime) >= minMs;
+
+      if (changed || timed) {
+        lastSentLabel = outgoing;
+        lastSentTime = now;
+        await sendLine(outgoing);
+        log(`Sent → ${outgoing}`);
+      }
+    }
+  }
+
+  // ---------- Wire UI ----------
+  $("threshold").addEventListener("input", () => {
+    $("thresholdVal").textContent = $("threshold").value;
+  });
+
+  $("btnConnect").addEventListener("click", async () => {
+    try {
+      await connectSerial();
+    } catch (e) {
+      alert("Could not connect to micro:bit.\n\n" + e.message);
+      log("Connect error: " + e.message);
+      setStatus("Not connected", false);
+    }
+  });
+
+  $("btnCheck").addEventListener("click", async () => {
+    const base = normalizeBaseUrl($("modelUrl").value);
+    if (!base) return alert("Paste a model URL first.");
+    try {
+      log("Checking: " + base + "model.json");
+      const ok = await checkModelUrl(base);
+      if (ok) {
+        alert("Model link looks good.");
+        log("Model URL OK.");
+        $("btnStart").disabled = false;
+      } else {
+        alert("Could not find model.json at that link.\n\nIf needed: Teachable Machine → Export Model → TensorFlow.js → host the exported folder, then paste that folder URL.");
+        log("Model URL failed (model.json not found).");
+        $("btnStart").disabled = true;
+      }
+    } catch (e) {
+      alert("URL check failed:\n\n" + e.message);
+      log("URL check error: " + e.message);
+      $("btnStart").disabled = true;
+    }
+  });
+
+  $("btnRemember").addEventListener("click", () => {
+    const base = normalizeBaseUrl($("modelUrl").value);
+    if (!base) return alert("Paste a model URL first.");
+    localStorage.setItem(LS_KEY, base);
+    log("Saved model URL in this browser.");
+    alert("Saved.");
+  });
+
+  $("btnClearRemember").addEventListener("click", () => {
+    localStorage.removeItem(LS_KEY);
+    log("Cleared saved model URL.");
+    alert("Cleared.");
+  });
+
+  $("btnStart").addEventListener("click", async () => {
+    const base = normalizeBaseUrl($("modelUrl").value);
+    if (!base) return alert("Paste a model URL first.");
+    try {
+      $("btnStart").disabled = true;
+      await stopAll();
+      await loadModel(base);
+      $("btnStop").disabled = false;
+      log("Running.");
+    } catch (e) {
+      alert("Could not start model/webcam:\n\n" + e.message);
+      log("Start error: " + e.message);
+      $("btnStart").disabled = false;
+      $("btnStop").disabled = true;
+    }
+  });
+
+  $("btnStop").addEventListener("click", async () => {
+    await stopAll();
+    $("btnStop").disabled = true;
+    $("btnStart").disabled = false;
+  });
+
+  window.addEventListener("beforeunload", async () => {
+    await stopAll();
+    await disconnectSerial();
+  });
+
+  // Initial UI state
+  setStatus("Not connected", false);
+  $("thresholdVal").textContent = $("threshold").value;
+  loadRememberedUrl();
 </script>
 </body>
 </html>
