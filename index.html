@@ -1,4 +1,324 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Micro:bit Light Monitor</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7f2;
+      --panel: #ffffff;
+      --ink: #1f2a22;
+      --muted: #647067;
+      --line: #dfe7dc;
+      --gold: #a46800;
+      --red: #b42318;
+    }
 
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+      font: 15px/1.45 Arial, Helvetica, sans-serif;
+    }
+
+    main {
+      width: min(880px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0;
+    }
+
+    header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 5vw, 44px);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin: 8px 0 0;
+      max-width: 560px;
+    }
+
+    .status {
+      min-width: 180px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 8px;
+      padding: 10px 12px;
+      text-align: right;
+      color: var(--muted);
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      min-height: 168px;
+      display: grid;
+      align-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .metric strong {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .value {
+      font-size: clamp(54px, 14vw, 104px);
+      line-height: 1;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    progress {
+      width: 100%;
+      height: 14px;
+      accent-color: var(--gold);
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 8px;
+      background: var(--ink);
+      color: #fff;
+      font-weight: 700;
+      padding: 11px 14px;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: #e7ece5;
+      color: var(--ink);
+    }
+
+    button:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+
+    pre {
+      min-height: 180px;
+      max-height: 280px;
+      overflow: auto;
+      white-space: pre-wrap;
+      margin: 0;
+      padding: 12px;
+      border-radius: 8px;
+      background: #172018;
+      color: #e7f3e9;
+      font-size: 13px;
+    }
+
+    .warning {
+      display: none;
+      border-left: 4px solid var(--red);
+      background: #fff4f2;
+      padding: 10px 12px;
+      border-radius: 8px;
+      color: #6d1b13;
+      margin-bottom: 12px;
+    }
+
+    .warning.show {
+      display: block;
+    }
+
+    @media (max-width: 700px) {
+      header {
+        display: grid;
+      }
+
+      .status {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>Micro:bit Light Monitor</h1>
+        <p class="subtitle">Read the micro:bit light level over USB serial and save each reading to Google Sheets.</p>
+      </div>
+      <div class="status" id="status">Ready</div>
+    </header>
+
+    <div class="warning" id="serialWarning">
+      This browser cannot access Web Serial. Use Chrome on the Chromebook and open this page over HTTPS.
+    </div>
+
+    <section class="panel">
+      <div class="metric">
+        <strong>Light Level</strong>
+        <div class="value" id="lightValue">--</div>
+        <progress id="lightBar" max="255" value="0"></progress>
+      </div>
+
+      <div class="buttons">
+        <button id="connectButton" type="button">Connect micro:bit</button>
+        <button class="secondary" id="disconnectButton" type="button" disabled>Disconnect</button>
+        <button class="secondary" id="setupButton" type="button">Set up sheet</button>
+      </div>
+
+      <pre id="log">Waiting for serial data...</pre>
+    </section>
+  </main>
+
+  <script>
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzIJvOzlYbpCDoMbzCdcPGgq7gSGRAv8vblh3tjex_fpGjjzi81FyaoBqzOz-1Ln7zr/exec';
+
+    const state = {
+      port: null,
+      reader: null,
+      keepReading: false,
+      buffer: '',
+      pendingReading: null,
+      writeTimer: null,
+      lastProblemSentAt: 0,
+      writeIntervalMinutes: 1
+    };
+
+    const els = {
+      status: document.getElementById('status'),
+      serialWarning: document.getElementById('serialWarning'),
+      connectButton: document.getElementById('connectButton'),
+      disconnectButton: document.getElementById('disconnectButton'),
+      setupButton: document.getElementById('setupButton'),
+      log: document.getElementById('log'),
+      lightValue: document.getElementById('lightValue'),
+      lightBar: document.getElementById('lightBar')
+    };
+
+    init();
+
+    function init() {
+      if (!('serial' in navigator)) {
+        els.serialWarning.classList.add('show');
+        els.connectButton.disabled = true;
+      }
+
+      els.connectButton.addEventListener('click', connectSerial);
+      els.disconnectButton.addEventListener('click', disconnectSerial);
+      els.setupButton.addEventListener('click', setupWorkbook);
+      loadRemoteConfig();
+      appendLog('Ready. Click Set up sheet once, then connect the micro:bit.');
+    }
+
+    async function connectSerial() {
+      try {
+        state.port = await navigator.serial.requestPort();
+        await state.port.open({ baudRate: 115200 });
+
+        state.keepReading = true;
+        els.connectButton.disabled = true;
+        els.disconnectButton.disabled = false;
+        setStatus('Connected');
+        appendLog(`Connected to micro:bit. Sheet writes will happen every ${state.writeIntervalMinutes} minute(s) while readings are received.`);
+        startWriteTimer();
+        readSerialLoop();
+      } catch (error) {
+        appendLog(`Connection failed: ${error.message}`);
+        reportProblem('Connection failed', error.message);
+        setStatus('Connection failed');
+      }
+    }
+
+    async function readSerialLoop() {
+      const decoder = new TextDecoder();
+
+      while (state.port && state.keepReading) {
+        try {
+          state.reader = state.port.readable.getReader();
+          while (state.keepReading) {
+            const { value, done } = await state.reader.read();
+            if (done) {
+              break;
+            }
+            if (value) {
+              handleSerialText(decoder.decode(value, { stream: true }));
+            }
+          }
+        } catch (error) {
+          appendLog(`Serial read error: ${error.message}`);
+          reportProblem('Serial read error', error.message);
+        } finally {
+          if (state.reader) {
+            state.reader.releaseLock();
+            state.reader = null;
+          }
+        }
+      }
+    }
+
+    async function disconnectSerial() {
+      state.keepReading = false;
+      if (state.reader) {
+        await state.reader.cancel();
+      }
+      if (state.port) {
+        await state.port.close();
+      }
+      state.port = null;
+      stopWriteTimer();
+      els.connectButton.disabled = !('serial' in navigator);
+      els.disconnectButton.disabled = true;
+      setStatus('Disconnected');
+      appendLog('Disconnected.');
+    }
+
+    function handleSerialText(text) {
+      state.buffer += text;
+      const lines = state.buffer.split(/\r?\n/);
+      state.buffer = lines.pop() || '';
+      lines.map(line => line.trim()).filter(Boolean).forEach(handleSerialLine);
+    }
+
+    function handleSerialLine(line) {
+      appendLog(line);
+      const reading = parseReading(line);
+      if (!reading) {
+        appendLog('Could not parse reading. Use _light level:128, light=128, {"light":128}, or just 128.');
+        return;
+      }
+
+      updateReadout(reading.light);
+      state.pendingReading = reading;
       setStatus(`Live ${reading.light}; next sheet write within 1 minute`);
     }
 
@@ -22,8 +342,128 @@
             data[normalizeKey(key)] = value;
           }
         });
-        return makeReading(data.light, line);
         return makeReading(data.light ?? data.lightlevel, line);
       }
 
       return makeReading(line, line);
+    }
+
+    function normalizeKey(key) {
+      return String(key).toLowerCase().replace(/[^a-z0-9]/g, '');
+    }
+
+    function makeReading(value, raw) {
+      const light = Number(value);
+      if (!Number.isFinite(light)) {
+        return null;
+      }
+      return {
+        light,
+        raw,
+        source: 'github-pages-web-serial'
+      };
+    }
+
+    function updateReadout(light) {
+      els.lightValue.textContent = light;
+      els.lightBar.value = Math.max(0, Math.min(255, light));
+    }
+
+    function setupWorkbook() {
+      sendBeacon({ setup: '1' });
+      setStatus('Setup sent');
+      appendLog('Setup request sent to Apps Script. Add the alert email under setup > Notify of Problems.');
+      window.setTimeout(loadRemoteConfig, 2000);
+    }
+
+    function startWriteTimer() {
+      stopWriteTimer();
+      state.writeTimer = window.setInterval(sendLatestReading, state.writeIntervalMinutes * 60000);
+    }
+
+    function stopWriteTimer() {
+      if (state.writeTimer) {
+        window.clearInterval(state.writeTimer);
+        state.writeTimer = null;
+      }
+    }
+
+    function sendLatestReading() {
+      if (!state.keepReading || !state.pendingReading) {
+        return;
+      }
+
+      const reading = state.pendingReading;
+      state.pendingReading = null;
+      sendBeacon({
+        light: reading.light,
+        raw: reading.raw,
+        source: reading.source
+      });
+      setStatus(`Sent ${reading.light} at ${new Date().toLocaleTimeString()}`);
+      appendLog(`Sheet write sent: ${reading.light}`);
+    }
+
+    function loadRemoteConfig() {
+      const callbackName = `applyRemoteConfig_${Date.now()}`;
+      window[callbackName] = config => {
+        applyRemoteConfig(config);
+        delete window[callbackName];
+      };
+
+      const url = new URL(WEB_APP_URL);
+      url.searchParams.set('config', '1');
+      url.searchParams.set('callback', callbackName);
+
+      const script = document.createElement('script');
+      script.src = url.toString();
+      script.onerror = () => appendLog('Could not load setup config. Using 1 minute sheet writes.');
+      document.body.appendChild(script);
+      window.setTimeout(() => script.remove(), 10000);
+    }
+
+    function applyRemoteConfig(config) {
+      const minutes = Number(config && config.writeIntervalMinutes);
+      state.writeIntervalMinutes = Number.isFinite(minutes) && minutes > 0 ? minutes : 1;
+      appendLog(`Sheet write interval: ${state.writeIntervalMinutes} minute(s).`);
+      if (state.keepReading) {
+        startWriteTimer();
+      }
+    }
+
+    function reportProblem(problem, detail) {
+      const now = Date.now();
+      if (now - state.lastProblemSentAt < 30 * 60000) {
+        return;
+      }
+
+      state.lastProblemSentAt = now;
+      sendBeacon({
+        problem,
+        detail
+      });
+    }
+
+    function sendBeacon(params) {
+      const url = new URL(WEB_APP_URL);
+      Object.entries(params).forEach(([key, value]) => {
+        url.searchParams.set(key, value);
+      });
+      const img = new Image();
+      img.style.display = 'none';
+      img.src = url.toString();
+      document.body.appendChild(img);
+      window.setTimeout(() => img.remove(), 10000);
+    }
+
+    function appendLog(message) {
+      const time = new Date().toLocaleTimeString();
+      els.log.textContent = `${time}  ${message}\n${els.log.textContent}`.slice(0, 6000);
+    }
+
+    function setStatus(message) {
+      els.status.textContent = message;
+    }
+  </script>
+</body>
+</html>
