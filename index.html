@@ -17,178 +17,33 @@
       --blue: #2374ab;
       --red: #b42318;
     }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background: var(--bg);
-      color: var(--ink);
-      font: 15px/1.45 Arial, Helvetica, sans-serif;
-    }
-
-    main {
-      width: min(980px, calc(100% - 32px));
-      margin: 0 auto;
-      padding: 28px 0;
-    }
-
-    header {
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      gap: 18px;
-      margin-bottom: 20px;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: clamp(28px, 5vw, 44px);
-      line-height: 1;
-      letter-spacing: 0;
-    }
-
-    .subtitle {
-      color: var(--muted);
-      margin: 8px 0 0;
-      max-width: 680px;
-    }
-
-    .status {
-      min-width: 210px;
-      border: 1px solid var(--line);
-      background: var(--panel);
-      border-radius: 8px;
-      padding: 10px 12px;
-      text-align: right;
-      color: var(--muted);
-    }
-
-    .panel {
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 16px;
-    }
-
-    .metrics {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-      margin-bottom: 14px;
-    }
-
-    .metric {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 16px;
-      min-height: 154px;
-      display: grid;
-      align-content: space-between;
-      gap: 12px;
-    }
-
-    .metric strong {
-      display: block;
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 700;
-      text-transform: uppercase;
-    }
-
-    .value {
-      font-size: clamp(44px, 9vw, 78px);
-      line-height: 1;
-      font-weight: 800;
-      letter-spacing: 0;
-    }
-
-    progress {
-      width: 100%;
-      height: 14px;
-    }
-
-    .light progress {
-      accent-color: var(--gold);
-    }
-
-    .moisture progress {
-      accent-color: var(--green);
-    }
-
-    .water progress {
-      accent-color: var(--blue);
-    }
-
-    .buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    button {
-      border: 0;
-      border-radius: 8px;
-      background: var(--ink);
-      color: #fff;
-      font-weight: 700;
-      padding: 11px 14px;
-      cursor: pointer;
-    }
-
-    button.secondary {
-      background: #e7ece5;
-      color: var(--ink);
-    }
-
-    button:disabled {
-      opacity: .55;
-      cursor: not-allowed;
-    }
-
-    pre {
-      min-height: 180px;
-      max-height: 280px;
-      overflow: auto;
-      white-space: pre-wrap;
-      margin: 0;
-      padding: 12px;
-      border-radius: 8px;
-      background: #172018;
-      color: #e7f3e9;
-      font-size: 13px;
-    }
-
-    .warning {
-      display: none;
-      border-left: 4px solid var(--red);
-      background: #fff4f2;
-      padding: 10px 12px;
-      border-radius: 8px;
-      color: #6d1b13;
-      margin-bottom: 12px;
-    }
-
-    .warning.show {
-      display: block;
-    }
-
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink); font: 15px/1.45 Arial, Helvetica, sans-serif; }
+    main { width: min(980px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0; }
+    header { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; margin-bottom: 20px; }
+    h1 { margin: 0; font-size: clamp(28px, 5vw, 44px); line-height: 1; letter-spacing: 0; }
+    .subtitle { color: var(--muted); margin: 8px 0 0; max-width: 680px; }
+    .status { min-width: 210px; border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 10px 12px; text-align: right; color: var(--muted); }
+    .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
+    .metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+    .metric { border: 1px solid var(--line); border-radius: 8px; padding: 16px; min-height: 154px; display: grid; align-content: space-between; gap: 12px; }
+    .metric strong { display: block; color: var(--muted); font-size: 13px; font-weight: 700; text-transform: uppercase; }
+    .value { font-size: clamp(44px, 9vw, 78px); line-height: 1; font-weight: 800; letter-spacing: 0; }
+    progress { width: 100%; height: 14px; }
+    .light progress { accent-color: var(--gold); }
+    .moisture progress { accent-color: var(--green); }
+    .water progress { accent-color: var(--blue); }
+    .buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+    button { border: 0; border-radius: 8px; background: var(--ink); color: #fff; font-weight: 700; padding: 11px 14px; cursor: pointer; }
+    button.secondary { background: #e7ece5; color: var(--ink); }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+    pre { min-height: 180px; max-height: 280px; overflow: auto; white-space: pre-wrap; margin: 0; padding: 12px; border-radius: 8px; background: #172018; color: #e7f3e9; font-size: 13px; }
+    .warning { display: none; border-left: 4px solid var(--red); background: #fff4f2; padding: 10px 12px; border-radius: 8px; color: #6d1b13; margin-bottom: 12px; }
+    .warning.show { display: block; }
     @media (max-width: 760px) {
-      header {
-        display: grid;
-      }
-
-      .status {
-        text-align: left;
-      }
-
-      .metrics {
-        grid-template-columns: 1fr;
-      }
+      header { display: grid; }
+      .status { text-align: left; }
+      .metrics { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -213,13 +68,11 @@
           <div class="value" id="lightValue">--</div>
           <progress id="lightBar" max="255" value="0"></progress>
         </div>
-
         <div class="metric moisture">
           <strong>Moisture Level</strong>
           <div class="value" id="moistureValue">--</div>
           <progress id="moistureBar" max="1023" value="0"></progress>
         </div>
-
         <div class="metric water">
           <strong>Water Level</strong>
           <div class="value" id="waterValue">--</div>
@@ -245,12 +98,7 @@
       reader: null,
       keepReading: false,
       buffer: '',
-      latestReading: {
-        light: null,
-        moisture: null,
-        water: null,
-        raw: ''
-      },
+      latestReading: { light: null, moisture: null, water: null, raw: '' },
       pendingReading: false,
       writeTimer: null,
       lastProblemSentAt: 0,
@@ -279,7 +127,6 @@
         els.serialWarning.classList.add('show');
         els.connectButton.disabled = true;
       }
-
       els.connectButton.addEventListener('click', connectSerial);
       els.disconnectButton.addEventListener('click', disconnectSerial);
       els.setupButton.addEventListener('click', setupWorkbook);
@@ -291,7 +138,6 @@
       try {
         state.port = await navigator.serial.requestPort();
         await state.port.open({ baudRate: 115200 });
-
         state.keepReading = true;
         els.connectButton.disabled = true;
         els.disconnectButton.disabled = false;
@@ -308,18 +154,13 @@
 
     async function readSerialLoop() {
       const decoder = new TextDecoder();
-
       while (state.port && state.keepReading) {
         try {
           state.reader = state.port.readable.getReader();
           while (state.keepReading) {
             const { value, done } = await state.reader.read();
-            if (done) {
-              break;
-            }
-            if (value) {
-              handleSerialText(decoder.decode(value, { stream: true }));
-            }
+            if (done) break;
+            if (value) handleSerialText(decoder.decode(value, { stream: true }));
           }
         } catch (error) {
           appendLog(`Serial read error: ${error.message}`);
@@ -335,12 +176,8 @@
 
     async function disconnectSerial() {
       state.keepReading = false;
-      if (state.reader) {
-        await state.reader.cancel();
-      }
-      if (state.port) {
-        await state.port.close();
-      }
+      if (state.reader) await state.reader.cancel();
+      if (state.port) await state.port.close();
       state.port = null;
       stopWriteTimer();
       els.connectButton.disabled = !('serial' in navigator);
@@ -363,7 +200,6 @@
         appendLog('Could not parse reading. Use Light Level:128, Moisture Level:700, Water Level:400, or JSON.');
         return;
       }
-
       mergeReading(reading, line);
       updateReadouts();
       state.pendingReading = true;
@@ -386,9 +222,7 @@
           const separator = part.includes('=') ? '=' : ':';
           const [key, ...valueParts] = part.split(separator).map(piece => piece.trim());
           const value = valueParts.join(separator);
-          if (key && value !== undefined) {
-            data[normalizeKey(key)] = value;
-          }
+          if (key && value !== undefined) data[normalizeKey(key)] = value;
         });
         return normalizeReadingObject(data);
       }
@@ -405,10 +239,9 @@
     function normalizeReadingObject(data) {
       const reading = {
         light: numberOrNull(data.light ?? data.lightlevel),
-        moisture: numberOrNull(data.moisture ?? data.moisturelevel ?? data.soil ?? data.soilmoisture ?? data.soilmoisturelevel),
-        water: numberOrNull(data.water ?? data.waterlevel)
+        moisture: numberOrNull(data.moisture ?? data.moisturelevel ?? data.moiture ?? data.moiturelevel ?? data.soil ?? data.soilmoisture ?? data.soilmoisturelevel),
+        water: numberOrNull(data.water ?? data.waterlevel ?? data.waterevel)
       };
-
       return reading.light === null && reading.moisture === null && reading.water === null ? null : reading;
     }
 
@@ -423,9 +256,7 @@
 
     function mergeReading(reading, raw) {
       ['light', 'moisture', 'water'].forEach(key => {
-        if (reading[key] !== null && reading[key] !== undefined) {
-          state.latestReading[key] = reading[key];
-        }
+        if (reading[key] !== null && reading[key] !== undefined) state.latestReading[key] = reading[key];
       });
       state.latestReading.raw = raw;
     }
@@ -437,9 +268,7 @@
     }
 
     function setMetric(valueEl, barEl, value) {
-      if (value === null || value === undefined) {
-        return;
-      }
+      if (value === null || value === undefined) return;
       valueEl.textContent = value;
       barEl.value = Math.max(0, value);
     }
@@ -464,10 +293,7 @@
     }
 
     function sendLatestReading() {
-      if (!state.keepReading || !state.pendingReading) {
-        return;
-      }
-
+      if (!state.keepReading || !state.pendingReading) return;
       state.pendingReading = false;
       sendBeacon({
         light: state.latestReading.light ?? '',
@@ -480,9 +306,11 @@
       appendLog('Sheet write sent.');
     }
 
-    function loadRemoteConfig() {
+    function loadRemoteConfig(attempt = 1) {
       const callbackName = `applyRemoteConfig_${Date.now()}`;
+      let completed = false;
       window[callbackName] = config => {
+        completed = true;
         applyRemoteConfig(config);
         delete window[callbackName];
       };
@@ -493,7 +321,15 @@
 
       const script = document.createElement('script');
       script.src = url.toString();
-      script.onerror = () => appendLog('Could not load setup config. Using 1 minute sheet writes.');
+      script.onerror = () => {
+        if (completed) return;
+        delete window[callbackName];
+        if (attempt < 2) {
+          window.setTimeout(() => loadRemoteConfig(attempt + 1), 1500);
+        } else {
+          appendLog('Could not load setup config. Using 1 minute sheet writes.');
+        }
+      };
       document.body.appendChild(script);
       window.setTimeout(() => script.remove(), 10000);
     }
@@ -502,29 +338,19 @@
       const minutes = Number(config && config.writeIntervalMinutes);
       state.writeIntervalMinutes = Number.isFinite(minutes) && minutes > 0 ? minutes : 1;
       appendLog(`Sheet write interval: ${state.writeIntervalMinutes} minute(s).`);
-      if (state.keepReading) {
-        startWriteTimer();
-      }
+      if (state.keepReading) startWriteTimer();
     }
 
     function reportProblem(problem, detail) {
       const now = Date.now();
-      if (now - state.lastProblemSentAt < 30 * 60000) {
-        return;
-      }
-
+      if (now - state.lastProblemSentAt < 30 * 60000) return;
       state.lastProblemSentAt = now;
-      sendBeacon({
-        problem,
-        detail
-      });
+      sendBeacon({ problem, detail });
     }
 
     function sendBeacon(params) {
       const url = new URL(WEB_APP_URL);
-      Object.entries(params).forEach(([key, value]) => {
-        url.searchParams.set(key, value);
-      });
+      Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
       const img = new Image();
       img.style.display = 'none';
       img.src = url.toString();
