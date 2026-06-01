@@ -274,10 +274,20 @@
     }
 
     function setupWorkbook() {
-      sendBeacon({ setup: '1' });
-      setStatus('Setup sent');
-      appendLog('Setup request sent to Apps Script. Use setup tab for email, thresholds, write interval, and email frequency.');
-      window.setTimeout(loadRemoteConfig, 2000);
+      setStatus('Setting up sheet...');
+      sendScriptRequest(
+        { setup: '1' },
+        result => {
+          setStatus('Setup confirmed');
+          appendLog(`Setup confirmed: ${result.sheetName}. Use setup tab for email, thresholds, write interval, and email frequency.`);
+          loadRemoteConfig();
+        },
+        () => {
+          setStatus('Setup request sent');
+          appendLog('Setup request sent, but confirmation was not received.');
+          window.setTimeout(loadRemoteConfig, 2000);
+        }
+      );
     }
 
     function startWriteTimer() {
@@ -295,15 +305,27 @@
     function sendLatestReading() {
       if (!state.keepReading || !state.pendingReading) return;
       state.pendingReading = false;
-      sendBeacon({
+      const payload = {
         light: state.latestReading.light ?? '',
         moisture: state.latestReading.moisture ?? '',
         water: state.latestReading.water ?? '',
         raw: state.latestReading.raw,
         source: 'github-pages-web-serial'
-      });
-      setStatus(`Sent plant data at ${new Date().toLocaleTimeString()}`);
-      appendLog('Sheet write sent.');
+      };
+
+      setStatus('Saving plant data...');
+      sendScriptRequest(
+        payload,
+        result => {
+          setStatus(`Saved plant data at ${new Date(result.timestamp).toLocaleTimeString()}`);
+          appendLog(`Sheet write confirmed: light=${payload.light}, moisture=${payload.moisture}, water=${payload.water}`);
+        },
+        () => {
+          state.pendingReading = true;
+          setStatus('Save not confirmed');
+          appendLog('Sheet write was not confirmed. Will retry on next timer.');
+        }
+      );
     }
 
     function loadRemoteConfig(attempt = 1) {
@@ -356,6 +378,44 @@
       img.src = url.toString();
       document.body.appendChild(img);
       window.setTimeout(() => img.remove(), 10000);
+    }
+
+    function sendScriptRequest(params, onSuccess, onError) {
+      const callbackName = `appsScriptCallback_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
+      let completed = false;
+      window[callbackName] = result => {
+        completed = true;
+        cleanup();
+        onSuccess(result || {});
+      };
+
+      const url = new URL(WEB_APP_URL);
+      Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
+      url.searchParams.set('callback', callbackName);
+
+      const script = document.createElement('script');
+      script.src = url.toString();
+      script.onerror = () => {
+        if (!completed) {
+          cleanup();
+          onError();
+        }
+      };
+
+      const timeout = window.setTimeout(() => {
+        if (!completed) {
+          cleanup();
+          onError();
+        }
+      }, 15000);
+
+      function cleanup() {
+        window.clearTimeout(timeout);
+        delete window[callbackName];
+        script.remove();
+      }
+
+      document.body.appendChild(script);
     }
 
     function appendLog(message) {
