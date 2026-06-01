@@ -497,8 +497,8 @@
         },
         () => {
           state.pendingReading = true;
-          setStatus('Save not confirmed');
-          appendLog('Sheet write was not confirmed. Will retry on next timer.');
+          setStatus('Save confirmation timed out');
+          appendLog('Sheet write confirmation timed out. Apps Script may still finish; will retry on next timer if needed.');
         }
       );
     }
@@ -583,7 +583,7 @@
           cleanup();
           onError();
         }
-      }, 20000);
+      }, 75000);
 
       window[callbackName] = result => {
         completed = true;
