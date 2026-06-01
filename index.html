@@ -238,7 +238,7 @@
   </main>
 
   <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzIJvOzlYbpCDoMbzCdcPGgq7gSGRAv8vblh3tjex_fpGjjzi81FyaoBqzOz-1Ln7zr/exec';
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxn1RhCULwvKZceUB6E2g_CspcUK6EGq5S96zGecqcZJ7xEfwoiZhw0kelTPBvNGy6D/exec';
 
     const state = {
       port: null,
@@ -567,21 +567,38 @@
     }
 
     function sendScriptRequest(params, onSuccess, onError) {
-      const url = new URL(WEB_APP_URL);
-      Object.entries(params).forEach(([key, value]) => {
-        url.searchParams.set(key, value);
-      });
-      url.searchParams.set('_', Date.now());
+      const frameName = `appsScriptPostFrame_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
+      const iframe = document.createElement('iframe');
+      iframe.name = frameName;
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
 
-      const img = new Image();
-      img.style.display = 'none';
-      img.src = url.toString();
-      document.body.appendChild(img);
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = WEB_APP_URL;
+      form.target = frameName;
+      form.style.display = 'none';
+      Object.entries(params).forEach(([key, value]) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = value;
+        form.appendChild(input);
+      });
+      const cacheInput = document.createElement('input');
+      cacheInput.type = 'hidden';
+      cacheInput.name = '_';
+      cacheInput.value = Date.now();
+      form.appendChild(cacheInput);
 
       window.setTimeout(() => {
-        img.remove();
+        form.remove();
+        iframe.remove();
         onSuccess({});
       }, 2000);
+
+      document.body.appendChild(form);
+      form.submit();
     }
 
     function appendLog(message) {
