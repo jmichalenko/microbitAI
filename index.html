@@ -448,9 +448,9 @@
       setStatus('Setting up sheet...');
       sendScriptRequest(
         { setup: '1' },
-        result => {
-          setStatus('Setup confirmed');
-          appendLog(`Setup confirmed for ${result.sheetName || 'Plant Data Readings'}. Use setup tab for email, thresholds, write interval, and email frequency.`);
+        () => {
+          setStatus('Setup request sent');
+          appendLog('Setup request sent. Use setup tab for email, thresholds, write interval, and email frequency.');
           loadRemoteConfig();
         },
         () => {
@@ -490,10 +490,9 @@
       setStatus('Saving plant data...');
       sendScriptRequest(
         payload,
-        result => {
-          const timestamp = result.timestamp ? new Date(result.timestamp).toLocaleTimeString() : new Date().toLocaleTimeString();
-          setStatus(`Saved plant data at ${timestamp}`);
-          appendLog(`Sheet write confirmed: light=${payload.light}, moisture=${payload.moisture}, water=${payload.water}`);
+        () => {
+          setStatus(`Sheet write request sent at ${new Date().toLocaleTimeString()}`);
+          appendLog(`Sheet write request sent: light=${payload.light}, moisture=${payload.moisture}, water=${payload.water}`);
         },
         () => {
           state.pendingReading = true;
@@ -568,44 +567,21 @@
     }
 
     function sendScriptRequest(params, onSuccess, onError) {
-      const callbackName = `appsScriptCallback_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
-      let completed = false;
       const url = new URL(WEB_APP_URL);
       Object.entries(params).forEach(([key, value]) => {
         url.searchParams.set(key, value);
       });
-      url.searchParams.set('callback', callbackName);
       url.searchParams.set('_', Date.now());
 
-      const script = document.createElement('script');
-      const timeout = window.setTimeout(() => {
-        if (!completed) {
-          cleanup();
-          onError();
-        }
-      }, 75000);
+      const img = new Image();
+      img.style.display = 'none';
+      img.src = url.toString();
+      document.body.appendChild(img);
 
-      window[callbackName] = result => {
-        completed = true;
-        cleanup();
-        onSuccess(result || {});
-      };
-
-      script.onerror = () => {
-        if (!completed) {
-          cleanup();
-          onError();
-        }
-      };
-
-      function cleanup() {
-        window.clearTimeout(timeout);
-        delete window[callbackName];
-        script.remove();
-      }
-
-      script.src = url.toString();
-      document.body.appendChild(script);
+      window.setTimeout(() => {
+        img.remove();
+        onSuccess({});
+      }, 2000);
     }
 
     function appendLog(message) {
