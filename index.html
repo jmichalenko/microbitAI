@@ -234,6 +234,7 @@
       <div class="buttons">
         <button id="connectButton" type="button">Connect micro:bit</button>
         <button class="secondary" id="disconnectButton" type="button" disabled>Disconnect</button>
+        <button class="secondary" id="wakeLockButton" type="button">Keep screen awake</button>
         <button class="secondary" id="setupButton" type="button">Set up sheet</button>
         <a class="button secondary" href="https://docs.google.com/spreadsheets/d/1D-jxK-tnDZY9aDYcqAQ7fol8pciNq8kXd28ruaW6ERM/edit?usp=sharing" target="_blank" rel="noopener">View datasheet</a>
         <a class="button secondary" href="https://makecode.microbit.org/_8hCgEmdJ2KrX" target="_blank" rel="noopener">Open MakeCode</a>
@@ -260,7 +261,8 @@
       pendingReading: false,
       writeTimer: null,
       lastProblemSentAt: 0,
-      writeIntervalMinutes: 1
+      writeIntervalMinutes: 1,
+      wakeLock: null
     };
 
     const els = {
@@ -268,6 +270,7 @@
       serialWarning: document.getElementById('serialWarning'),
       connectButton: document.getElementById('connectButton'),
       disconnectButton: document.getElementById('disconnectButton'),
+      wakeLockButton: document.getElementById('wakeLockButton'),
       setupButton: document.getElementById('setupButton'),
       log: document.getElementById('log'),
       lightValue: document.getElementById('lightValue'),
@@ -288,7 +291,9 @@
 
       els.connectButton.addEventListener('click', connectSerial);
       els.disconnectButton.addEventListener('click', disconnectSerial);
+      els.wakeLockButton.addEventListener('click', toggleWakeLock);
       els.setupButton.addEventListener('click', setupWorkbook);
+      document.addEventListener('visibilitychange', restoreWakeLock);
       loadRemoteConfig();
       appendLog('Ready. Click Set up sheet once, then connect the micro:bit.');
     }
@@ -353,6 +358,57 @@
       els.disconnectButton.disabled = true;
       setStatus('Disconnected');
       appendLog('Disconnected.');
+    }
+
+    async function toggleWakeLock() {
+      if (state.wakeLock) {
+        await releaseWakeLock();
+        return;
+      }
+
+      await requestWakeLock();
+    }
+
+    async function requestWakeLock() {
+      if (!('wakeLock' in navigator)) {
+        appendLog('Screen wake lock is not supported in this browser.');
+        setStatus('Wake lock unavailable');
+        return;
+      }
+
+      try {
+        state.wakeLock = await navigator.wakeLock.request('screen');
+        els.wakeLockButton.textContent = 'Allow screen sleep';
+        setStatus('Screen staying awake');
+        appendLog('Screen wake lock is active while this page stays open.');
+
+        state.wakeLock.addEventListener('release', () => {
+          state.wakeLock = null;
+          els.wakeLockButton.textContent = 'Keep screen awake';
+        });
+      } catch (error) {
+        appendLog(`Wake lock failed: ${error.message}`);
+        setStatus('Wake lock failed');
+      }
+    }
+
+    async function releaseWakeLock() {
+      if (!state.wakeLock) {
+        return;
+      }
+
+      const lock = state.wakeLock;
+      state.wakeLock = null;
+      await lock.release();
+      els.wakeLockButton.textContent = 'Keep screen awake';
+      setStatus('Screen can sleep');
+      appendLog('Screen wake lock released.');
+    }
+
+    async function restoreWakeLock() {
+      if (document.visibilityState === 'visible' && els.wakeLockButton.textContent === 'Allow screen sleep' && !state.wakeLock) {
+        await requestWakeLock();
+      }
     }
 
     function handleSerialText(text) {
