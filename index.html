@@ -130,7 +130,8 @@
       margin-bottom: 12px;
     }
 
-    button {
+    button,
+    .button {
       border: 0;
       border-radius: 8px;
       background: var(--ink);
@@ -138,9 +139,12 @@
       font-weight: 700;
       padding: 11px 14px;
       cursor: pointer;
+      display: inline-block;
+      text-decoration: none;
     }
 
-    button.secondary {
+    button.secondary,
+    .button.secondary {
       background: #e7ece5;
       color: var(--ink);
     }
@@ -231,6 +235,8 @@
         <button id="connectButton" type="button">Connect micro:bit</button>
         <button class="secondary" id="disconnectButton" type="button" disabled>Disconnect</button>
         <button class="secondary" id="setupButton" type="button">Set up sheet</button>
+        <a class="button secondary" href="https://docs.google.com/spreadsheets/d/1D-jxK-tnDZY9aDYcqAQ7fol8pciNq8kXd28ruaW6ERM/edit?usp=sharing" target="_blank" rel="noopener">View datasheet</a>
+        <a class="button secondary" href="https://makecode.microbit.org/_8hCgEmdJ2KrX" target="_blank" rel="noopener">Open MakeCode</a>
       </div>
 
       <pre id="log">Waiting for serial data...</pre>
@@ -238,7 +244,7 @@
   </main>
 
   <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxn1RhCULwvKZceUB6E2g_CspcUK6EGq5S96zGecqcZJ7xEfwoiZhw0kelTPBvNGy6D/exec';
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxb7fZtX66hSc7_Ab8djhIQpmnjk3It1FVo4O1U5HLhYDzngyL0oAgmYBe5aeGXRVOn/exec';
 
     const state = {
       port: null,
