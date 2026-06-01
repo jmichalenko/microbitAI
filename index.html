@@ -1,431 +1,196 @@
 <!doctype html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Teachable Machine → micro:bit USB Serial Bridge</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Micro:bit Light Monitor</title>
   <style>
-    body { font-family: system-ui, Arial, sans-serif; margin: 18px; line-height: 1.35; }
-    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin: 10px 0; }
-    input[type="text"] { width: min(900px, 100%); padding: 10px; font-size: 14px; }
-    button { padding: 10px 14px; font-size: 14px; cursor: pointer; }
-    .card { border: 1px solid #ddd; border-radius: 12px; padding: 14px; margin-top: 12px; background: #fff; }
-    .small { font-size: 12px; color: #444; }
-    .status { font-weight: 600; }
-    .good { color: #0a7a0a; }
-    .bad { color: #b00020; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre-wrap; }
-    #webcam { width: 320px; height: 240px; background: #000; border-radius: 12px; }
-    label { font-weight: 600; }
-    select { padding: 10px; font-size: 14px; }
-    .steps li { margin: 6px 0; }
-    .pill { display:inline-block; padding:2px 8px; border:1px solid #ddd; border-radius:999px; font-size:12px; background:#fafafa; }
-    .warning {
-      background:#fff4f4;
-      border:2px solid #b00020;
-      border-radius:12px;
-      padding:12px;
-      margin-top:12px;
-    }
-    .warning strong { color:#b00020; }
-
-    /* Remove underlines from links */
-    a, a:visited, a:hover, a:active { color: inherit; text-decoration: none; }
-    .link-pill {
-      display:inline-block;
-      padding:8px 10px;
-      border:1px solid #ddd;
-      border-radius:999px;
-      background:#f7f7f7;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size: 13px;
-    }
-    .link-pill:hover { background:#efefef; }
-
-    /* Top banner "graphic" (no external images needed) */
-    .hero {
-      border-radius: 16px;
-      padding: 18px 16px;
-      border: 1px solid #e6e6e6;
-      background: linear-gradient(135deg, #f4f8ff 0%, #ffffff 45%, #f7fff9 100%);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 14px;
-    }
-    .hero-left { display:flex; align-items:center; gap: 12px; }
-    .mark {
-      width: 44px; height: 44px;
-      border-radius: 14px;
-      border: 1px solid #dcdcdc;
-      background: #ffffff;
-      display:flex; align-items:center; justify-content:center;
-      box-shadow: 0 1px 8px rgba(0,0,0,0.06);
-      flex: 0 0 auto;
-    }
-    .title-wrap h1 { margin: 0; font-size: 22px; }
-    .title-wrap p { margin: 4px 0 0 0; color:#444; font-size: 13px; }
-    .hero-right { display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
-    .tag {
-      font-size: 12px;
-      border: 1px solid #e1e1e1;
-      background: #ffffff;
-      border-radius: 999px;
-      padding: 6px 10px;
-      color: #333;
-    }
-    @media (max-width: 720px) {
-      .hero { flex-direction: column; align-items: flex-start; }
-      .hero-right { justify-content:flex-start; }
-    }
+    body { margin: 0; font-family: Arial, sans-serif; background: #f5f7f2; color: #1f2a22; }
+    main { max-width: 850px; margin: 0 auto; padding: 28px 16px; }
+    h1 { font-size: 44px; margin: 0 0 8px; }
+    p { color: #647067; font-size: 18px; }
+    .panel { background: white; border: 1px solid #dfe7dc; border-radius: 8px; padding: 18px; }
+    .metric { border: 1px solid #dfe7dc; border-radius: 8px; padding: 18px; margin-bottom: 14px; }
+    .label { color: #647067; font-weight: bold; text-transform: uppercase; }
+    #lightValue { font-size: 88px; font-weight: bold; margin: 30px 0; }
+    progress { width: 100%; height: 14px; accent-color: #a46800; }
+    button { border: 0; border-radius: 8px; background: #1f2a22; color: white; font-weight: bold; padding: 12px 16px; cursor: pointer; }
+    button.secondary { background: #e7ece5; color: #1f2a22; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    .buttons { display: flex; gap: 10px; flex-wrap: wrap; margin: 14px 0; }
+    pre { background: #172018; color: #e7f3e9; padding: 12px; border-radius: 8px; min-height: 180px; white-space: pre-wrap; overflow: auto; }
+    .warning { display: none; background: #fff4f2; border-left: 4px solid #b42318; padding: 10px; border-radius: 8px; margin-bottom: 12px; }
+    .warning.show { display: block; }
   </style>
-
-  <!-- TFJS + Teachable Machine Image library -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
 </head>
-
 <body>
+  <main>
+    <h1>Micro:bit Light Monitor</h1>
+    <p>Read the micro:bit light level over USB serial and save each reading to Google Sheets.</p>
 
-  <!-- Header "graphic" -->
-  <div class="hero">
-    <div class="hero-left">
-      <div class="mark" aria-hidden="true">
-        <!-- Simple inline SVG icon -->
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-          <path d="M7 7h10v10H7V7Z" stroke="#111" stroke-width="1.5" />
-          <path d="M9 5V3m6 2V3M9 21v-2m6 2v-2M5 9H3m2 6H3m18-6h-2m2 6h-2"
-                stroke="#111" stroke-width="1.5" stroke-linecap="round"/>
-          <path d="M10 12h4" stroke="#111" stroke-width="1.5" stroke-linecap="round"/>
-          <path d="M12 10v4" stroke="#111" stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
+    <div class="warning" id="serialWarning">
+      This browser cannot access Web Serial. Use Chrome on the Chromebook and open this page over HTTPS.
+    </div>
+
+    <section class="panel">
+      <div class="metric">
+        <div class="label">Light Level</div>
+        <div id="lightValue">--</div>
+        <progress id="lightBar" max="255" value="0"></progress>
       </div>
-      <div class="title-wrap">
-        <h1>Teachable Machine → micro:bit Bridge</h1>
-        <p>Paste your model link, connect your micro:bit, then start sending predictions.</p>
+
+      <div class="buttons">
+        <button id="connectButton">Connect micro:bit</button>
+        <button class="secondary" id="disconnectButton" disabled>Disconnect</button>
+        <button class="secondary" id="setupButton">Set up sheet</button>
       </div>
-    </div>
-    <div class="hero-right">
-      <span class="tag">Chrome / Edge</span>
-      <span class="tag">USB Serial</span>
-      <span class="tag">Image Model</span>
-    </div>
-  </div>
 
-  <div class="card">
-    <h2>Student steps</h2>
-    <ol class="steps">
-      <li>
-        Open the micro:bit starter code:
-        <a class="link-pill" href="https://makecode.microbit.org/S83995-91415-95726-23216" target="_blank" rel="noopener">
-          https://makecode.microbit.org/S83995-91415-95726-23216
-        </a>
-      </li>
-      <li>Connect your micro:bit using a USB data cable.</li>
-      <li>Paste your Teachable Machine model link below and click <span class="pill">Check URL</span>.</li>
-      <li>Click <span class="pill">Connect micro:bit (USB)</span> and choose the micro:bit port.</li>
-      <li>Click <span class="pill">Start</span> to send predictions to the micro:bit.</li>
-      <li>If you update or re-download code to the micro:bit, click <span class="pill">Stop</span> then <span class="pill">Start</span>.</li>
-    </ol>
-  </div>
+      <pre id="log">Waiting for serial data...</pre>
+    </section>
+  </main>
 
-  <div class="card">
-    <div class="row">
-      <label for="modelUrl">Teachable Machine model URL:</label>
-    </div>
-    <div class="row">
-      <input id="modelUrl" type="text"
-        placeholder="Paste your Teachable Machine model link here"
-        autocomplete="off" />
-      <button id="btnCheck">Check URL</button>
-      <button id="btnRemember">Remember URL</button>
-      <button id="btnClearRemember">Clear</button>
-    </div>
+  <script>
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzIJvOzlYbpCDoMbzCdcPGgq7gSGRAv8vblh3tjex_fpGjjzi81FyaoBqzOz-1Ln7zr/exec';
 
-    <div class="row">
-      <button id="btnConnect">Connect micro:bit (USB)</button>
-      <button id="btnStart" disabled>Start</button>
-      <button id="btnStop" disabled>Stop</button>
-    </div>
+    const state = { port: null, reader: null, keepReading: false, buffer: '' };
 
-    <div class="row">
-      <label for="threshold">Confidence threshold:</label>
-      <input id="threshold" type="range" min="0.50" max="0.99" step="0.01" value="0.85" />
-      <span class="mono" id="thresholdVal">0.85</span>
+    const els = {
+      serialWarning: document.getElementById('serialWarning'),
+      connectButton: document.getElementById('connectButton'),
+      disconnectButton: document.getElementById('disconnectButton'),
+      setupButton: document.getElementById('setupButton'),
+      log: document.getElementById('log'),
+      lightValue: document.getElementById('lightValue'),
+      lightBar: document.getElementById('lightBar')
+    };
 
-      <label for="minInterval" style="margin-left:14px;">Min send interval (ms):</label>
-      <input id="minInterval" type="number" value="350" min="50" max="5000" step="50"
-             style="width:110px;padding:8px;" />
-    </div>
-
-    <div class="row">
-      <label for="sendMode">What to send to micro:bit:</label>
-      <select id="sendMode">
-        <option value="className" selected>Class name</option>
-        <option value="abc">A / B / C / … (recommended)</option>
-      </select>
-    </div>
-
-    <p class="status" id="status">Status: <span class="bad">Not connected</span></p>
-    <p class="small">Sent format: <span class="mono">LABEL\n</span></p>
-  </div>
-
-  <div class="row">
-    <canvas id="webcam" width="320" height="240"></canvas>
-
-    <div class="card" style="flex:1; min-width: 320px;">
-      <h3>Live prediction</h3>
-      <div class="mono" id="predOut">—</div>
-      <h3>Serial log</h3>
-      <div class="mono" id="log" style="max-height:240px; overflow:auto;">—</div>
-    </div>
-  </div>
-
-  <!-- Warning moved to the bottom -->
-  <div class="warning">
-    <strong>IMPORTANT:</strong> Before clicking <strong>Connect micro:bit (USB)</strong>, make sure:
-    <ul>
-      <li>The <strong>MakeCode serial monitor is CLOSED</strong></li>
-      <li>No other program or browser tab is using the micro:bit</li>
-    </ul>
-    If the micro:bit was just reprogrammed, click <strong>Stop</strong> then <strong>Start</strong> again.
-  </div>
-
-<script>
-  // ---------- UI helpers ----------
-  const $ = (id) => document.getElementById(id);
-  const logEl = $("log");
-  function log(msg) {
-    const now = new Date().toLocaleTimeString();
-    logEl.textContent = (logEl.textContent === "—" ? "" : logEl.textContent) + `[${now}] ${msg}\n`;
-    logEl.scrollTop = logEl.scrollHeight;
-  }
-  function setStatus(text, ok) {
-    $("status").innerHTML = `Status: <span class="${ok ? "good" : "bad"}">${text}</span>`;
-  }
-
-  // ---------- Remember model URL ----------
-  const LS_KEY = "tm_microbit_bridge_model_url";
-  function loadRememberedUrl() {
-    const saved = localStorage.getItem(LS_KEY);
-    if (saved) $("modelUrl").value = saved;
-  }
-
-  // ---------- Web Serial ----------
-  let port = null;
-  let writer = null;
-
-  async function connectSerial() {
-    if (!("serial" in navigator)) {
-      alert("Web Serial is not supported in this browser. Use Chrome or Edge on a desktop/laptop.");
-      return;
+    if (!('serial' in navigator)) {
+      els.serialWarning.classList.add('show');
+      els.connectButton.disabled = true;
     }
-    port = await navigator.serial.requestPort();
-    await port.open({ baudRate: 115200 });
-    writer = port.writable.getWriter();
-    setStatus("micro:bit connected (USB serial)", true);
-    log("Connected to micro:bit.");
-  }
 
-  async function sendLine(line) {
-    if (!writer) return;
-    const data = new TextEncoder().encode(line + "\n");
-    await writer.write(data);
-  }
+    els.connectButton.addEventListener('click', connectSerial);
+    els.disconnectButton.addEventListener('click', disconnectSerial);
+    els.setupButton.addEventListener('click', () => {
+      sendToSheet({ setup: '1' });
+      log('Setup request sent.');
+    });
 
-  async function disconnectSerial() {
-    try {
-      if (writer) { writer.releaseLock(); writer = null; }
-      if (port) { await port.close(); port = null; }
-    } catch (e) { /* ignore */ }
-    setStatus("Not connected", false);
-    log("Disconnected.");
-  }
-
-  // ---------- Teachable Machine (Image) ----------
-  let model = null;
-  let webcam = null;
-  let loopHandle = null;
-
-  let lastSentLabel = "";
-  let lastSentTime = 0;
-
-  function normalizeBaseUrl(u) {
-    u = (u || "").trim();
-    if (!u) return "";
-    if (!u.endsWith("/")) u += "/";
-    return u;
-  }
-
-  async function checkModelUrl(baseUrl) {
-    const modelJson = baseUrl + "model.json";
-    const res = await fetch(modelJson, { method: "GET" });
-    return res.ok;
-  }
-
-  function toABC(bestIndex) {
-    return String.fromCharCode("A".charCodeAt(0) + bestIndex);
-  }
-
-  async function loadModel(baseUrl) {
-    const modelURL = baseUrl + "model.json";
-    const metadataURL = baseUrl + "metadata.json";
-    model = await tmImage.load(modelURL, metadataURL);
-    log("Model loaded.");
-
-    const flip = true;
-    webcam = new tmImage.Webcam(320, 240, flip);
-    await webcam.setup();
-    await webcam.play();
-    log("Webcam started.");
-
-    const canvas = $("webcam");
-    const ctx = canvas.getContext("2d");
-
-    async function frame() {
-      webcam.update();
-      ctx.drawImage(webcam.canvas, 0, 0, canvas.width, canvas.height);
-      await predictAndMaybeSend();
-      loopHandle = requestAnimationFrame(frame);
-    }
-    loopHandle = requestAnimationFrame(frame);
-  }
-
-  async function stopAll() {
-    if (loopHandle) cancelAnimationFrame(loopHandle);
-    loopHandle = null;
-
-    if (webcam) {
-      try { await webcam.stop(); } catch(e) {}
-      webcam = null;
-    }
-    model = null;
-    $("predOut").textContent = "—";
-    log("Stopped.");
-  }
-
-  async function predictAndMaybeSend() {
-    if (!model || !webcam) return;
-
-    const preds = await model.predict(webcam.canvas);
-
-    let best = preds[0];
-    let bestIndex = 0;
-    for (let i = 0; i < preds.length; i++) {
-      const p = preds[i];
-      if (p.probability > best.probability) {
-        best = p;
-        bestIndex = i;
+    async function connectSerial() {
+      try {
+        state.port = await navigator.serial.requestPort();
+        await state.port.open({ baudRate: 115200 });
+        state.keepReading = true;
+        els.connectButton.disabled = true;
+        els.disconnectButton.disabled = false;
+        log('Connected to micro:bit.');
+        readSerialLoop();
+      } catch (error) {
+        log('Connection failed: ' + error.message);
       }
     }
 
-    const thr = parseFloat($("threshold").value);
-    const minMs = parseInt($("minInterval").value || "350", 10);
-    const now = Date.now();
+    async function readSerialLoop() {
+      const decoder = new TextDecoder();
 
-    $("predOut").textContent =
-      `Top: ${best.className}  (${best.probability.toFixed(3)})\n` +
-      preds.map(p => `${p.className}: ${p.probability.toFixed(3)}`).join("\n");
+      while (state.port && state.keepReading) {
+        try {
+          state.reader = state.port.readable.getReader();
 
-    if (writer && best.probability >= thr) {
-      const sendMode = $("sendMode").value;
-      const outgoing = (sendMode === "abc") ? toABC(bestIndex) : best.className;
-
-      const changed = outgoing !== lastSentLabel;
-      const timed = (now - lastSentTime) >= minMs;
-
-      if (changed || timed) {
-        lastSentLabel = outgoing;
-        lastSentTime = now;
-        await sendLine(outgoing);
-        log(`Sent → ${outgoing}`);
+          while (state.keepReading) {
+            const { value, done } = await state.reader.read();
+            if (done) break;
+            if (value) handleSerialText(decoder.decode(value, { stream: true }));
+          }
+        } catch (error) {
+          log('Serial read error: ' + error.message);
+        } finally {
+          if (state.reader) {
+            state.reader.releaseLock();
+            state.reader = null;
+          }
+        }
       }
     }
-  }
 
-  // ---------- Wire UI ----------
-  $("threshold").addEventListener("input", () => {
-    $("thresholdVal").textContent = $("threshold").value;
-  });
-
-  $("btnConnect").addEventListener("click", async () => {
-    try {
-      await connectSerial();
-    } catch (e) {
-      alert("Could not connect to micro:bit.\n\n" + e.message);
-      log("Connect error: " + e.message);
-      setStatus("Not connected", false);
+    async function disconnectSerial() {
+      state.keepReading = false;
+      if (state.reader) await state.reader.cancel();
+      if (state.port) await state.port.close();
+      state.port = null;
+      els.connectButton.disabled = false;
+      els.disconnectButton.disabled = true;
+      log('Disconnected.');
     }
-  });
 
-  $("btnCheck").addEventListener("click", async () => {
-    const base = normalizeBaseUrl($("modelUrl").value);
-    if (!base) return alert("Paste a model URL first.");
-    try {
-      log("Checking: " + base + "model.json");
-      const ok = await checkModelUrl(base);
-      if (ok) {
-        alert("Model link looks good.");
-        log("Model URL OK.");
-        $("btnStart").disabled = false;
-      } else {
-        alert("Could not find model.json at that link.\n\nIf needed: Teachable Machine → Export Model → TensorFlow.js → host the exported folder, then paste that folder URL.");
-        log("Model URL failed (model.json not found).");
-        $("btnStart").disabled = true;
+    function handleSerialText(text) {
+      state.buffer += text;
+      const lines = state.buffer.split(/\r?\n/);
+      state.buffer = lines.pop() || '';
+      lines.map(line => line.trim()).filter(Boolean).forEach(handleSerialLine);
+    }
+
+    function handleSerialLine(line) {
+      log(line);
+      const reading = parseReading(line);
+
+      if (!reading) {
+        log('Could not parse reading.');
+        return;
       }
-    } catch (e) {
-      alert("URL check failed:\n\n" + e.message);
-      log("URL check error: " + e.message);
-      $("btnStart").disabled = true;
+
+      els.lightValue.textContent = reading.light;
+      els.lightBar.value = Math.max(0, Math.min(255, reading.light));
+
+      sendToSheet({
+        light: reading.light,
+        raw: reading.raw,
+        source: 'hosted-web-serial'
+      });
+
+      log('Sent light level ' + reading.light);
     }
-  });
 
-  $("btnRemember").addEventListener("click", () => {
-    const base = normalizeBaseUrl($("modelUrl").value);
-    if (!base) return alert("Paste a model URL first.");
-    localStorage.setItem(LS_KEY, base);
-    log("Saved model URL in this browser.");
-    alert("Saved.");
-  });
+    function parseReading(line) {
+      if (line.startsWith('{')) {
+        try {
+          const data = JSON.parse(line);
+          return makeReading(data.light ?? data.lightLevel, line);
+        } catch {
+          return null;
+        }
+      }
 
-  $("btnClearRemember").addEventListener("click", () => {
-    localStorage.removeItem(LS_KEY);
-    log("Cleared saved model URL.");
-    alert("Cleared.");
-  });
+      if (line.includes('=') || line.includes(':')) {
+        const separator = line.includes('=') ? '=' : ':';
+        const parts = line.split(separator);
+        return makeReading(parts.slice(1).join(separator).trim(), line);
+      }
 
-  $("btnStart").addEventListener("click", async () => {
-    const base = normalizeBaseUrl($("modelUrl").value);
-    if (!base) return alert("Paste a model URL first.");
-    try {
-      $("btnStart").disabled = true;
-      await stopAll();
-      await loadModel(base);
-      $("btnStop").disabled = false;
-      log("Running.");
-    } catch (e) {
-      alert("Could not start model/webcam:\n\n" + e.message);
-      log("Start error: " + e.message);
-      $("btnStart").disabled = false;
-      $("btnStop").disabled = true;
+      return makeReading(line, line);
     }
-  });
 
-  $("btnStop").addEventListener("click", async () => {
-    await stopAll();
-    $("btnStop").disabled = true;
-    $("btnStart").disabled = false;
-  });
+    function makeReading(value, raw) {
+      const light = Number(value);
+      if (!Number.isFinite(light)) return null;
+      return { light, raw };
+    }
 
-  window.addEventListener("beforeunload", async () => {
-    await stopAll();
-    await disconnectSerial();
-  });
+    function sendToSheet(params) {
+      const url = new URL(WEB_APP_URL);
+      Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
 
-  // Initial UI state
-  setStatus("Not connected", false);
-  $("thresholdVal").textContent = $("threshold").value;
-  loadRememberedUrl();
-</script>
+      const img = new Image();
+      img.src = url.toString();
+      img.style.display = 'none';
+      document.body.appendChild(img);
+      setTimeout(() => img.remove(), 10000);
+    }
+
+    function log(message) {
+      const time = new Date().toLocaleTimeString();
+      els.log.textContent = `${time}  ${message}\n${els.log.textContent}`;
+    }
+  </script>
 </body>
 </html>
