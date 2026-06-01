@@ -277,9 +277,9 @@
       setStatus('Setting up sheet...');
       sendScriptRequest(
         { setup: '1' },
-        result => {
-          setStatus('Setup confirmed');
-          appendLog(`Setup confirmed: ${result.sheetName}. Use setup tab for email, thresholds, write interval, and email frequency.`);
+        () => {
+          setStatus('Setup request completed');
+          appendLog('Setup request completed. Use setup tab for email, thresholds, write interval, and email frequency.');
           loadRemoteConfig();
         },
         () => {
@@ -316,8 +316,8 @@
       setStatus('Saving plant data...');
       sendScriptRequest(
         payload,
-        result => {
-          setStatus(`Saved plant data at ${new Date(result.timestamp).toLocaleTimeString()}`);
+        () => {
+          setStatus(`Save request completed at ${new Date().toLocaleTimeString()}`);
           appendLog(`Sheet write confirmed: light=${payload.light}, moisture=${payload.moisture}, water=${payload.water}`);
         },
         () => {
@@ -381,25 +381,18 @@
     }
 
     function sendScriptRequest(params, onSuccess, onError) {
-      const callbackName = `appsScriptCallback_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
       let completed = false;
-      window[callbackName] = result => {
+      const url = new URL(WEB_APP_URL);
+      Object.entries(params).forEach(([key, value]) => {
+        url.searchParams.set(key, value);
+      });
+
+      const frame = document.createElement('iframe');
+      frame.style.display = 'none';
+      frame.onload = () => {
         completed = true;
         cleanup();
-        onSuccess(result || {});
-      };
-
-      const url = new URL(WEB_APP_URL);
-      Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
-      url.searchParams.set('callback', callbackName);
-
-      const script = document.createElement('script');
-      script.src = url.toString();
-      script.onerror = () => {
-        if (!completed) {
-          cleanup();
-          onError();
-        }
+        onSuccess({});
       };
 
       const timeout = window.setTimeout(() => {
@@ -411,11 +404,11 @@
 
       function cleanup() {
         window.clearTimeout(timeout);
-        delete window[callbackName];
-        script.remove();
+        window.setTimeout(() => frame.remove(), 1000);
       }
 
-      document.body.appendChild(script);
+      frame.src = url.toString();
+      document.body.appendChild(frame);
     }
 
     function appendLog(message) {
