@@ -524,8 +524,6 @@
         delete window[callbackName];
         if (attempt < 2) {
           window.setTimeout(() => loadRemoteConfig(attempt + 1), 1500);
-        } else {
-          appendLog('Could not load setup config. Using 1 minute sheet writes.');
         }
       };
       document.body.appendChild(script);
